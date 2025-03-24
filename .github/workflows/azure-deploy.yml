@@ -26,6 +26,7 @@ jobs:
           cd backend
           poetry config virtualenvs.create false
           poetry install --without dev
+          pip install psycopg2-binary
           
       - name: Setup Node.js
         uses: actions/setup-node@v3

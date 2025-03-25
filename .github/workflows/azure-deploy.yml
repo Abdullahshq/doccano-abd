@@ -26,7 +26,7 @@ jobs:
           cd backend
           poetry config virtualenvs.create false
           poetry install --without dev
-          pip install psycopg2-binary
+          pip install psycopg2-binary gunicorn whitenoise
           
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -39,16 +39,30 @@ jobs:
           npm install
           npm run build
           
-      - name: Collect static files
+      - name: Prepare deployment package
         run: |
+          # Create proper directory structure for Azure
+          mkdir -p backend/client/dist/static
+          cp -r frontend/dist/* backend/client/dist/
+          
+          # Ensure web.config is in the root directory
+          cp web.config backend/
+          cp startup.sh backend/
+          chmod +x backend/startup.sh
+          
+          # Collect static files
           cd backend
-          mkdir -p client/dist/static
-          cp -r ../frontend/dist/* client/dist/
-          DJANGO_SETTINGS_MODULE=config.settings.production python manage.py collectstatic --noinput
+          DJANGO_SETTINGS_MODULE=config.settings.azure python manage.py collectstatic --noinput
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: 'False'
+          WEBSITE_HOSTNAME: ${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net
+      
+      - name: Create deployment ZIP
+        run: |
+          cd backend
+          zip -r ../deployment.zip .
       
       - name: Azure Login
         uses: azure/login@v1
@@ -59,13 +73,14 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          package: .
+          package: ./deployment.zip
           
       - name: Run database migrations
         run: |
           cd backend
-          DJANGO_SETTINGS_MODULE=config.settings.production python manage.py migrate
+          DJANGO_SETTINGS_MODULE=config.settings.azure python manage.py migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DEBUG: 'False' 
+          DEBUG: 'False'
+          WEBSITE_HOSTNAME: ${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net

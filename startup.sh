@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Navigate to backend directory
-cd backend
-
 # Set environment variables
 export DJANGO_SETTINGS_MODULE=config.settings.azure
 
@@ -23,8 +20,8 @@ else:
     print('Superuser already exists or no password provided')
 "
 
-# Run Gunicorn
-gunicorn --bind=0.0.0.0:8000 config.wsgi:application
+# Run Gunicorn with increased timeout
+gunicorn --bind=0.0.0.0:8000 --timeout=120 config.wsgi:application
 
 # Start Celery worker in background (if needed)
-# celery -A config worker --loglevel=info & 
+# celery -A config worker --loglevel=info &

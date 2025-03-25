@@ -50,6 +50,39 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: 'False'
       
+      # Create a deployment package with only necessary files
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy_package
+          cp -r backend/* deploy_package/
+          cp -r backend/.* deploy_package/ 2>/dev/null || :
+          # Create a web.config file for Azure if it doesn't exist
+          if [ ! -f deploy_package/web.config ]; then
+            echo '<?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <system.webServer>
+                <handlers>
+                  <add name="PythonHandler" path="*" verb="*" modules="FastCgiModule" scriptProcessor="D:\home\Python\python.exe|D:\home\Python\wfastcgi.py" resourceType="Unspecified" requireAccess="Script"/>
+                </handlers>
+                <rewrite>
+                  <rules>
+                    <rule name="Static Files" stopProcessing="true">
+                      <match url="^static/.*" ignoreCase="true" />
+                      <action type="Rewrite" url="^static/.*" appendQueryString="true" />
+                    </rule>
+                    <rule name="Configure Python" stopProcessing="true">
+                      <match url="(.*)" ignoreCase="true" />
+                      <action type="Rewrite" url="handler.fcgi/{R:1}" appendQueryString="true" />
+                    </rule>
+                  </rules>
+                </rewrite>
+              </system.webServer>
+            </configuration>' > deploy_package/web.config
+          fi
+          # Create a startup script
+          echo 'gunicorn --bind=0.0.0.0:8000 --workers=4 config.wsgi:application' > deploy_package/startup.sh
+          chmod +x deploy_package/startup.sh
+      
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -59,7 +92,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          package: .
+          package: ./deploy_package
           
       - name: Run database migrations
         run: |

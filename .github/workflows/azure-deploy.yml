@@ -45,10 +45,13 @@ jobs:
           mkdir -p backend/client/dist/static
           cp -r frontend/dist/* backend/client/dist/
           
-          # Ensure web.config is in the root directory
+          # Ensure web.config and startup.sh are in the root directory
           cp web.config backend/
           cp startup.sh backend/
           chmod +x backend/startup.sh
+          
+          # Verify files exist
+          ls -la backend/
           
           # Collect static files
           cd backend
@@ -62,12 +65,12 @@ jobs:
       - name: Create deployment ZIP
         run: |
           cd backend
-          zip -r ../deployment.zip .
+          zip -r ../deployment.zip . -x "*.git*"
 
-      - name: Debug ZIP File  # Debugging step
+      - name: Debug ZIP File
         run: |
           ls -lah deployment.zip
-          unzip -l deployment.zip  # List contents of the TAR file
+          unzip -l deployment.zip  # List contents of the ZIP file
       
       - name: Azure Login
         uses: azure/login@v1
@@ -78,7 +81,8 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          package: ./deployment.zip
+          package: "./deployment.zip"
+          slot-name: production
           
       - name: Run database migrations
         run: |

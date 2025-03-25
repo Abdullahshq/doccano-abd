@@ -3,6 +3,9 @@
 # Set environment variables
 export DJANGO_SETTINGS_MODULE=config.settings.azure
 
+# Change to the directory containing manage.py
+cd "$(dirname "$0")"
+
 # Run migrations
 python manage.py migrate
 
@@ -21,7 +24,7 @@ else:
 "
 
 # Run Gunicorn with increased timeout
-gunicorn --bind=0.0.0.0:8000 --timeout=120 config.wsgi:application
+gunicorn --bind=0.0.0.0:8000 --timeout=120 config.wsgi_azure:application
 
 # Start Celery worker in background (if needed)
 # celery -A config worker --loglevel=info &

@@ -65,7 +65,7 @@ jobs:
       - name: Create deployment ZIP
         run: |
           cd backend
-          zip -r ../deployment.zip . -x "*.git*"
+          zip -r ../deployment.zip . -x "*.git*" "__pycache__/*" "*.pytest_cache/*"
 
       - name: Debug ZIP File
         run: |

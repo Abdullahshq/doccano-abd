@@ -59,15 +59,15 @@ jobs:
           DEBUG: 'False'
           WEBSITE_HOSTNAME: ${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net
       
-      - name: Create deployment TAR 
+      - name: Create deployment ZIP
         run: |
           cd backend
-          tar -czf ../deployment.tar.gz .
-      
-      - name: Debug TAR File  # Debugging step
+          zip -r ../deployment.zip .
+
+      - name: Debug ZIP File  # Debugging step
         run: |
-          ls -lah deployment.tar.gz
-          tar -tzf deployment.tar.gz  # List contents of the TAR file
+          ls -lah deployment.zip
+          unzip -l deployment.zip  # List contents of the TAR file
       
       - name: Azure Login
         uses: azure/login@v1
@@ -78,7 +78,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          package: ./deployment.tar.gz
+          package: ./deployment.zip
           
       - name: Run database migrations
         run: |

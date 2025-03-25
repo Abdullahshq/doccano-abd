@@ -82,6 +82,7 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           package: "./deployment.zip"
+          scm-do-build-during-deployment: true
           slot-name: production
           
       - name: Run database migrations

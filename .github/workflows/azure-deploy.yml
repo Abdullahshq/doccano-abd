@@ -52,6 +52,7 @@ jobs:
           
           # Verify files exist
           ls -la backend/
+          ls -la backend/client/dist/
           
           # Collect static files
           cd backend
@@ -82,7 +83,6 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           package: "./deployment.zip"
-          scm-do-build-during-deployment: true
           slot-name: production
           
       - name: Run database migrations

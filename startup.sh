@@ -4,7 +4,7 @@
 export DJANGO_SETTINGS_MODULE=config.settings.azure
 
 # Change to the directory containing manage.py
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/backend"
 
 # Run migrations
 python manage.py migrate
